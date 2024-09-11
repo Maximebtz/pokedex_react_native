@@ -1,38 +1,43 @@
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { ThemedText } from '@/components/ThemedText'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Card } from '@/components/Card'
 import { PokemonCard } from '@/components/pokemon/PokemonCard'
-import { useFetchQuery, useInfiniteFetchQuery } from '@/hooks/useFetchQuery'
+import { useInfiniteFetchQuery } from '@/hooks/useFetchQuery'
 import { getPokemonId } from '@/functions/pokemon'
+import { SearchBar } from '@/components/searchBar'
 
 const index = () => {
   const colors = useThemeColors()
-  const {data, isFetching, fetchNextPage} = useInfiniteFetchQuery('/pokemon?limit=21')
-  const pokemons = data?.pages.flatMap(page => page.results) ?? []
-
+  const { data, isFetching, fetchNextPage } = useInfiniteFetchQuery('/pokemon?limit=21')
+  const pokemons = data?.pages.flatMap(page => page.results) ?? [] // flatMap pour convertir un tableau de tableaux en un seul tableau
+  const [search, setSearch] = useState('') // Tu crées un état local search pour stocker la valeur de la recherche
 
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: colors.tint}]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.tint }]}>
       <View style={styles.header}>
-        <Image source={require("@/assets/images/Logo/pokeball.png")} width={24} height={24}/>
+        <Image source={require("@/assets/images/Logo/pokeball.png")} width={24} height={24} />
         <ThemedText variant="headline" color='grayLight'>Pokedex</ThemedText>
+      </View>
+      <View>
+        <SearchBar value={search} onChange={setSearch} />
       </View>
       <Card style={styles.body}> 
         <FlatList 
-        data={pokemons} 
-        numColumns={3}
-        contentContainerStyle={[styles.gridGap, styles.list]}
-        columnWrapperStyle={styles.gridGap}
-        ListFooterComponent={
-          isFetching ? <ActivityIndicator color={colors.tint} /> : null
-        }
-        onEndReached={() => fetchNextPage()}
-        renderItem={({item}) => <PokemonCard id={getPokemonId(item.url)} name={item.name} style={{flex: 1/3}}/>
-      } 
-      keyExtractor={(item) => item.url}/>
+          data={pokemons} // Tu passes les données de la liste des Pokémon
+          numColumns={3} // Pour afficher les Pokémon en 3 colonnes
+          contentContainerStyle={[styles.gridGap, styles.list]} // Pour ajouter un espacement entre les lignes
+          columnWrapperStyle={styles.gridGap} // Pour ajouter un espacement entre les colonnes
+          ListFooterComponent={
+            isFetching ? <ActivityIndicator color={colors.tint} /> : null
+          } // Si isFetching est vrai, tu affiches un indicateur d’activité pour montrer que tu es en train de charger des données
+          onEndReached={() => fetchNextPage()} // Quand l’utilisateur atteint la fin de la liste, tu déclenches fetchNextPage pour charger plus de Pokémon
+          renderItem={({ item }) => <PokemonCard id={getPokemonId(item.url)} name={item.name} style={{ flex: 1 / 3 }} />
+          } // Pour chaque Pokémon, tu affiches un composant PokemonCard avec l’ID et le nom du Pokémon
+          keyExtractor={(item) => item.url} // Pour identifier chaque élément de la liste
+        /> 
       </Card>
     </SafeAreaView>
   )
