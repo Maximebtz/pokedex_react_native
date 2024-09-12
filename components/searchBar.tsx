@@ -10,7 +10,7 @@ type Props = {
 export function SearchBar({value, onChange}: Props) {
  const colors = useThemeColors()
     return (
-    <Row style={[styles.wrapper, {backgroundColor: colors.white}]}>
+    <Row style={[styles.wrapper, {backgroundColor: colors.white}]} >
         <Image 
             source={require("@/assets/images/Icons/search.png")} 
             style={styles.image}
