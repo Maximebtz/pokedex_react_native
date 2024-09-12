@@ -7,33 +7,35 @@ import { Card } from '@/components/Card'
 import { PokemonCard } from '@/components/pokemon/PokemonCard'
 import { useInfiniteFetchQuery } from '@/hooks/useFetchQuery'
 import { getPokemonId } from '@/functions/pokemon'
-import { SearchBar } from '@/components/searchBar'
+import { Row } from '@/components/Row'
+
 
 const index = () => {
   const colors = useThemeColors()
   const { data, isFetching, fetchNextPage } = useInfiniteFetchQuery('/pokemon?limit=21')
   const pokemons = data?.pages.flatMap(page => page.results) ?? [] // flatMap pour convertir un tableau de tableaux en un seul tableau
   const [search, setSearch] = useState('') // Tu crées un état local search pour stocker la valeur de la recherche
+  const filteredPokemons = search ? pokemons.filter(p => p.name.includes(search.toLowerCase()) || getPokemonId(p.url).toString() == search) : pokemons // Si search n’est pas vide, tu filtres les Pokémon en fonction de la recherche
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.tint }]}>
-      <View style={styles.header}>
+      <Row style={styles.header} gap={12}>
         <Image source={require("@/assets/images/Logo/pokeball.png")} width={24} height={24} />
         <ThemedText variant="headline" color='grayLight'>Pokedex</ThemedText>
-      </View>
-      <View>
+      </Row>
+      <Row>
         <SearchBar value={search} onChange={setSearch} />
-      </View>
+      </Row>
       <Card style={styles.body}> 
         <FlatList 
-          data={pokemons} // Tu passes les données de la liste des Pokémon
+          data={filteredPokemons} // Tu passes les données de la liste des Pokémon
           numColumns={3} // Pour afficher les Pokémon en 3 colonnes
           contentContainerStyle={[styles.gridGap, styles.list]} // Pour ajouter un espacement entre les lignes
           columnWrapperStyle={styles.gridGap} // Pour ajouter un espacement entre les colonnes
           ListFooterComponent={
             isFetching ? <ActivityIndicator color={colors.tint} /> : null
           } // Si isFetching est vrai, tu affiches un indicateur d’activité pour montrer que tu es en train de charger des données
-          onEndReached={() => fetchNextPage()} // Quand l’utilisateur atteint la fin de la liste, tu déclenches fetchNextPage pour charger plus de Pokémon
+          onEndReached={search ? undefined : () => fetchNextPage()} // Quand l’utilisateur atteint la fin de la liste, tu déclenches fetchNextPage pour charger plus de Pokémon
           renderItem={({ item }) => <PokemonCard id={getPokemonId(item.url)} name={item.name} style={{ flex: 1 / 3 }} />
           } // Pour chaque Pokémon, tu affiches un composant PokemonCard avec l’ID et le nom du Pokémon
           keyExtractor={(item) => item.url} // Pour identifier chaque élément de la liste
@@ -51,13 +53,12 @@ const styles = StyleSheet.create({
     padding: 4
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   body: {
     flex: 1,
+    marginTop: 16
   },
   gridGap: {
     gap: 8,
